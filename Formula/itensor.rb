@@ -15,9 +15,10 @@ class Itensor < Formula
 
   depends_on "openblas" => (OS.mac? ? :optional : :recommended)
 
-  needs :cxx11
-
   def install
+    
+    ENV.cxx11
+    
     if build.with? "openblas"
       platform = "openblas"
       openblas_dir = Formula["openblas"].opt_prefix
