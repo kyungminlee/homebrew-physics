@@ -1,8 +1,8 @@
 class Itensor < Formula
   desc "C++ library for implementing tensor product wavefunction calculations"
   homepage "http://itensor.org/"
-  url "https://github.com/ITensor/ITensor/archive/v2.1.1.tar.gz"
-  sha256 "b91a67af66ed0fa7678494f3895b5d5ae7f1dc1026540689f9625f515cb7791c"
+  url "https://github.com/ITensor/ITensor/archive/v3.0.0.tar.gz"
+  sha256 "1d249a3a6442188a9f7829b32238c1025457c2930566d134a785994b1f7c54a9"
   head "https://github.com/ITensor/ITensor.git"
 
   bottle do
@@ -35,7 +35,7 @@ class Itensor < Formula
     end
 
     (buildpath/"options.mk").write <<~EOS
-      CCCOM=#{ENV.cxx} -std=c++11 -fPIC
+      CCCOM=#{ENV.cxx} -std=c++17 -fPIC
       PLATFORM=#{platform}
       BLAS_LAPACK_LIBFLAGS=#{blas_lapack_libflags}
       BLAS_LAPACK_INCLUDEFLAGS=#{blas_lapack_includeflags}
@@ -103,7 +103,7 @@ class Itensor < Formula
       using namespace itensor;
       int main()
       {
-          Index i("i", 2), j("j", 2);
+          Index i(2, "i"), j(2);
           ITensor t(i,j), u(i), s, v;
           t.fill(1.0);
           svd(t, u, s, v);
@@ -111,7 +111,7 @@ class Itensor < Formula
           return 0;
       }
     EOS
-    system ENV.cxx, "-std=c++11", "test.cc", "-o", "test",
+    system ENV.cxx, "-std=c++17", "test.cc", "-o", "test",
         "-I#{include}", "-L#{lib}", "-litensor", *blas_lapack_flags
     assert_match "2.00", shell_output("./test").chomp
   end
