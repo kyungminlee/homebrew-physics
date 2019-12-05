@@ -1,29 +1,41 @@
 class Itensor < Formula
   desc "C++ library for implementing tensor product wavefunction calculations"
   homepage "http://itensor.org/"
-  url "https://github.com/ITensor/ITensor/archive/v3.0.0.tar.gz"
-  sha256 "1d249a3a6442188a9f7829b32238c1025457c2930566d134a785994b1f7c54a9"
+  url "https://github.com/ITensor/ITensor/archive/v3.1.1.tar.gz"
+  sha256 "3c12d288e50522b5bd152f956a48ec187486cfeb4ccb1ea9a05d3f0bf3bf8059"
   head "https://github.com/ITensor/ITensor.git"
 
-  bottle do
-    cellar :any
-    sha256 "adfd2ddce1898aafd8a82f0150e1adac148e5eb7d177a0203437b5947190708b" => :sierra
-    sha256 "cf5e854aa45d1e2d233e9e4017360f517b97947e1b14b2b57b86b0dff98cce6c" => :el_capitan
-    sha256 "87b72c913c0fe34e2e9de07d5c51572e5fcba17ecb6602c3c6970a49a8f6d774" => :yosemite
-    sha256 "f15f69aea74013c54daf78b5bfcdfd7ada5c366f904967dc31fe8bdbb190fb4d" => :x86_64_linux
+  option "with-openblas", "Build with OpenBLAS"
+  option "with-libflame", "Build with libFLAME"
+
+  if build.with? "openblas"
+    if build.with? "libflame"
+      odie "Options --with-openblas and --with-libflame are mutually exclusive."
+    end
+    depends_on "openblas"
+  elsif build.with? "libflame"
+    depends_on "libflame"
+    depends_on "blis"
   end
 
-  depends_on "openblas" => (OS.mac? ? :optional : :recommended)
+  unless OS.mac?
+    fails_with :gcc => "5"
+    fails_with :gcc => "6"
+  end
 
   def install
-    
     ENV.cxx11
-    
     if build.with? "openblas"
       platform = "openblas"
       openblas_dir = Formula["openblas"].opt_prefix
-      blas_lapack_libflags = "-lpthread -L#{openblas_dir}/lib -lopenblas"
+      blas_lapack_libflags = "-L#{openblas_dir}/lib -lopenblas -lpthread"
       blas_lapack_includeflags = "-I#{openblas_dir}/include -DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE"
+    elsif build.with? "libflame"
+      platform = "lapack"
+      libflame_dir = Formula["libflame"].opt_prefix
+      blis_dir = Formula["blis"].opt_prefix
+      blas_lapack_libflags = "-L#{libflame_dir}/lib -L#{blis_dir}/lib -lflame -lblis -lpthread"
+      blas_lapack_includeflags = "-I#{libflame_dir}/include -I#{blis_dir}/include"
     elsif OS.mac?
       platform="macos"
       blas_lapack_libflags = "-framework Accelerate"
@@ -62,7 +74,7 @@ class Itensor < Formula
 
     lib.mkpath
 
-    system "make"
+    system "make", "-j#{ENV.make_jobs}"
 
     include.mkpath
     ["itensor",
@@ -81,8 +93,12 @@ class Itensor < Formula
   test do
     if build.with? "openblas"
       openblas_dir = Formula["openblas"].opt_prefix
-      blas_lapack_flags = ["-I#{openblas_dir}/include", "-DHAVE_LAPACK_CONFIG_H", "-DLAPACK_COMPLEX_STRUCTURE",
-                           "-lpthread", "-L#{openblas_dir}/lib", "-lopenblas"]
+      blas_lapack_flags = ["-DHAVE_LAPACK_CONFIG_H", "-DLAPACK_COMPLEX_STRUCTURE",
+                           "-L#{openblas_dir}/lib", "-lopenblas", "-lpthread"]
+    elsif build.with? "libflame"
+      libflame_dir = Formula["libflame"].opt_prefix
+      blis_dir = Formula["blis"].opt_prefix
+      blas_lapack_flags = ["-L#{libflame_dir}/lib", "-L#{blis_dir}/lib", "-lflame", "-lblis", "-lpthread"]
     elsif OS.mac?
       blas_lapack_flags = ["-framework", "Accelerate"]
     else
@@ -103,7 +119,7 @@ class Itensor < Formula
       }
     EOS
     system ENV.cxx, "-std=c++17", "test.cc", "-o", "test",
-        "-I#{include}", "-L#{lib}", "-litensor", *blas_lapack_flags
+                    "-I#{include}", "-L#{lib}", "-litensor", *blas_lapack_flags
     assert_match "2.00", shell_output("./test").chomp
   end
 end
