@@ -1,8 +1,8 @@
 class Itensor < Formula
   desc "C++ library for implementing tensor product wavefunction calculations"
   homepage "http://itensor.org/"
-  url "https://github.com/ITensor/ITensor/archive/v3.1.1.tar.gz"
-  sha256 "3c12d288e50522b5bd152f956a48ec187486cfeb4ccb1ea9a05d3f0bf3bf8059"
+  url "https://github.com/ITensor/ITensor/archive/v3.1.3.tar.gz"
+  sha256 "ff6b04f9c642c6795acd3485f44619282a2dde7a49a4e0dee89b47b69dc3853e"
   head "https://github.com/ITensor/ITensor.git"
 
   option "with-openblas", "Build with OpenBLAS"
@@ -78,15 +78,19 @@ class Itensor < Formula
 
     include.mkpath
     ["itensor",
-     "itensor/detail",
-     "itensor/mps",
-     "itensor/mps/lattice",
-     "itensor/mps/sites",
-     "itensor/itdata",
      "itensor/tensor",
-     "itensor/util"].each do |p|
+     "itensor/util",
+     "itensor/util/h5",
+     "itensor/util/h5/stl",
+     "itensor/util/h5/std_addons",
+     "itensor/mps",
+     "itensor/mps/sites",
+     "itensor/mps/lattice",
+     "itensor/itdata",
+     "itensor/detail",
+    ].each do |p|
       (include + p).mkpath
-      (include + p).install Dir["#{p}/*.h", "#{p}/*.ih"]
+      (include + p).install Dir["#{p}/*.h", "#{p}/*.ih", "#{p}/*.hpp"]
     end
   end
 
