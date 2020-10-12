@@ -47,12 +47,12 @@ class Itensor < Formula
     end
 
     (buildpath/"options.mk").write <<~EOS
-      CCCOM=#{ENV.cxx} -std=c++17 -fPIC
+      CCCOM=#{ENV.cxx} -std=c++17 -fPIC -fconcepts
       PLATFORM=#{platform}
       BLAS_LAPACK_LIBFLAGS=#{blas_lapack_libflags}
       BLAS_LAPACK_INCLUDEFLAGS=#{blas_lapack_includeflags}
       OPTIMIZATIONS=-O2 -DNDEBUG -Wall
-      DEBUGFLAGS=-DDEBUG -g -Wall -pedantic
+      DEBUGFLAGS=-DDEBUG -g -Og -Wall -pedantic
       ITENSOR_MAKE_DYLIB=1
       PREFIX=#{prefix}
       ITENSOR_LIBDIR=#{lib}
